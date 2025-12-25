@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>LexTools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --ios-ease: cubic-bezier(0.32, 0.72, 0, 1);
+        --ios-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1);
+        --ios-spring-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+        --glass-border: rgba(255, 255, 255, 0.08);
+        --glass-bg: rgba(30, 30, 35, 0.4);
+        
+        /* Default Accent - can be changed via JS */
+        --accent-color: 99, 102, 241; /* Indigo */
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background-color: #000;
+        overflow: hidden; /* App handles scrolling internally */
+        overscroll-behavior-y: none;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        height: 100dvh;
+        width: 100vw;
+        background: #050505;
+        touch-action: none; 
+        user-select: none;
+        -webkit-user-select: none;
+      }
+
+      /* Desktop Selection */
+      @media (min-width: 1024px) {
+        body {
+          user-select: auto;
+          -webkit-user-select: auto;
+        }
+      }
+
+      /* Low Power Mode Overrides */
+      body.low-power {
+        --glass-bg: rgba(20, 20, 20, 0.95);
+      }
+      body.low-power .glass-panel,
+      body.low-power .backdrop-blur-md,
+      body.low-power .backdrop-blur-xl, 
+      body.low-power .backdrop-blur-sm {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: rgba(25, 25, 30, 0.95);
+      }
+
+      #root {
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .app-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        display: flex; /* For Desktop Flex Layout */
+        flex-direction: column;
+      }
+
+      /* Desktop Layout Overrides */
+      @media (min-width: 1024px) {
+        .app-container {
+          flex-direction: row; /* Sidebar | Content */
+        }
+      }
+
+      * {
+        -webkit-tap-highlight-color: transparent;
+        box-sizing: border-box;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      /* Custom Scrollbar for Desktop/Webkit */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .gpu-layer {
+        transform: translate3d(0,0,0);
+        will-change: transform, opacity; 
+        backface-visibility: hidden;
+        -webkit-font-smoothing: subpixel-antialiased;
+      }
+
+      .touch-pan-x { touch-action: pan-x; }
+      .touch-pan-y { touch-action: pan-y; }
+      
+      .content-lock {
+        content-visibility: auto;
+        contain-intrinsic-size: 0 80px;
+      }
+
+      /* Animations */
+      @keyframes slideUpFade {
+        0% { opacity: 0; transform: translate3d(0, 40px, 0) scale(0.96); }
+        100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+      }
+
+      @keyframes scaleIn {
+        0% { opacity: 0; transform: scale(0.9); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes scaleOutBlur {
+        0% { opacity: 1; transform: scale(1); filter: blur(0px); }
+        100% { opacity: 0; transform: scale(1.1); filter: blur(20px); }
+      }
+
+      .animate-slide-up {
+        animation: slideUpFade 0.7s var(--ios-spring-smooth) forwards;
+        opacity: 0;
+      }
+      .animate-scale-in {
+        animation: scaleIn 0.6s var(--ios-spring) forwards;
+        opacity: 0;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+      }
+      .animate-scale-out {
+        animation: scaleOutBlur 0.6s var(--ios-ease) forwards;
+      }
+      
+      .delay-100 { animation-delay: 100ms; }
+      .delay-200 { animation-delay: 200ms; }
+      .delay-300 { animation-delay: 300ms; }
+      .delay-500 { animation-delay: 500ms; }
+
+      .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+      .pt-safe { padding-top: env(safe-area-inset-top, 20px); }
+      
+      /* Utilities using Accent Color */
+      .text-accent { color: rgb(var(--accent-color)); }
+      .bg-accent { background-color: rgb(var(--accent-color)); }
+      .bg-accent-10 { background-color: rgba(var(--accent-color), 0.1); }
+      .bg-accent-20 { background-color: rgba(var(--accent-color), 0.2); }
+      .border-accent { border-color: rgba(var(--accent-color), 0.5); }
+      .shadow-accent { box-shadow: 0 0 20px rgba(var(--accent-color), 0.3); }
+      
+      /* Refactored Glass Styles */
+      .glass-panel-light {
+        background-color: rgba(28, 28, 30, 0.5); /* #1c1c1e at 50% */
+        backdrop-filter: blur(24px) saturate(150%);
+        -webkit-backdrop-filter: blur(24px) saturate(150%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      /* Prose Typography for Editor */
+      .prose-editor {
+        line-height: 1.6;
+        color: rgba(255,255,255,0.9);
+      }
+      .prose-editor h1 { font-size: 1.5em; font-weight: 700; margin-bottom: 0.5em; }
+      .prose-editor h2 { font-size: 1.25em; font-weight: 600; margin-top: 1em; margin-bottom: 0.5em; }
+      .prose-editor p { margin-bottom: 1em; }
+      .prose-editor ul { list-style-type: disc; padding-left: 1.2em; margin-bottom: 1em; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

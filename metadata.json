@@ -1,0 +1,7 @@
+{
+  "name": "LexTools",
+  "description": "Интеллектуальная система планирования и управления делами.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
